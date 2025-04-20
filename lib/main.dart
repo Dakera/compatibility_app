@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/interaction_check_screen.dart'; // <-- подключаем
 
 void main() {
-  runApp(MedCompatibilityApp());
+  runApp(const MyApp());
 }
 
-class MedCompatibilityApp extends StatelessWidget {
-  const MedCompatibilityApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Medication Compatibility',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-        useMaterial3: true,
-      ),
-      home: HomeScreen(),
+      title: 'Drug Compatibility Demo',
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
+      home: const InteractionCheckScreen(), // <-- ставим как главный экран
     );
   }
 }
