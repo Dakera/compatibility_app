@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:multi_select_flutter/multi_select_flutter.dart';
+//import 'package:multi_select_flutter/multi_select_flutter.dart';
 import '../models/interaction.dart';
-import '../data/mock_interactions.dart';
 import '../data/mock_medications.dart';
 import 'medication_list_screen.dart';
-import '../models/medication.dart';
+import '../widgets/interaction_card.dart';
 
 class InteractionCheckScreen extends StatefulWidget {
   const InteractionCheckScreen({super.key});
@@ -17,7 +16,7 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
   //List<String> selectedMeds = [];
   List<Interaction> foundInteractions = [];
   final TextEditingController _medController = TextEditingController();
-  List<String> _selectedMedications = [];
+  final List<String> _selectedMedications = [];
 
   @override
   void dispose() {
@@ -31,33 +30,19 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
     });
   }
 
-  void checkInteractions() {
-    final results = <Interaction>[];
+void checkInteractions() {
+  final selected = mockMedications
+      .where((m) => _selectedMedications.contains(m.name))
+      .toList();
 
-    for (int i = 0; i < _selectedMedications.length; i++) {
-      for (int j = i + 1; j < _selectedMedications.length; j++) {
-        final med1 = _selectedMedications[i];
-        final med2 = _selectedMedications[j];
+  final results = generateInteractions(selected);
 
-        final interaction = mockInteractions.firstWhere(
-          (interaction) =>
-              interaction.medications.contains(med1) &&
-              interaction.medications.contains(med2),
-          orElse: () => Interaction(
-            medications: [med1, med2],
-            severity: InteractionSeverity.green,
-            description: 'No known interaction.',
-          ),
-        );
+  setState(() {
+    foundInteractions = results;
+  });
+}
 
-        results.add(interaction);
-      }
-    }
 
-    setState(() {
-      foundInteractions = results;
-    });
-  }
 
   Color getColor(InteractionSeverity severity) {
     switch (severity) {
@@ -84,7 +69,7 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final medicationNames = mockMedications.map((m) => m.name).toList();
+    //final medicationNames = mockMedications.map((m) => m.name).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -180,21 +165,6 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
                 ),
               ),
 
-
-            MultiSelectDialogField<String>(
-              items: medicationNames.map((e) => MultiSelectItem(e, e)).toList(),
-              title: const Text('Medications'),
-              buttonText: const Text('Select Medications'),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.teal),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              onConfirm: (values) {
-                setState(() {
-                  _selectedMedications = values;
-                });
-              },
-            ),
             const SizedBox(height: 16),
             Row( 
               mainAxisAlignment: MainAxisAlignment.center,
@@ -218,61 +188,10 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
                 child: ListView.builder(
                   itemCount: foundInteractions.length,
                   itemBuilder: (context, index) {
-                  final interaction = foundInteractions[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: ExpansionTile(
-                        leading: getSeverityIcon(interaction.severity),
-                        title: Text(
-                          interaction.medications.join(' + '),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          interaction.severity.name.toUpperCase(),
-                          style: TextStyle(color: getColor(interaction.severity)),
-                        ),
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                            child: Text(interaction.description),
-                          ),
-                          ...interaction.medications.map((medName) {
-                            final med = mockMedications.firstWhere(
-                              (m) => m.name == medName,
-                                orElse: () => throw Exception('Medication with name $medName not found'),
-                            );
-                            return Card(
-                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      med.name,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text('Active ingradient: ${med.activeIngredient}'),
-                                    Text('Group: ${med.group.join(', ')}'),
-                                    Text('Forms: ${med.form.join(', ')}'),
-                                    Text('Also known as: ${med.tradeNames.join(', ')}'),
-                                    Text('Side effects: ${med.sideEffects.join(', ')}'),
-                                    //if (med.contraindications.isNotEmpty)
-                                    //  Text('⚠ Contraindications: ${med.contraindications.join(', ')}'),
-                                    if (med.warnings.isNotEmpty)
-                                      Text('❗ Warnings: ${med.warnings.join(', ')}'),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    );
-
-
+                    final interaction = foundInteractions[index];
+                    return InteractionCard(interaction: interaction); // refactored to use interaction_card.dart
                   },
+
                 ),
               ),
           ],
