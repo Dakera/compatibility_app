@@ -69,7 +69,7 @@ class InteractionCard extends StatelessWidget {
               );
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Card(
+                child: Card( // med card
                   elevation: 1,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   child: Padding(

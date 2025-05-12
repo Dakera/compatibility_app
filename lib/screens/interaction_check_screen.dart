@@ -4,6 +4,7 @@ import '../models/interaction.dart';
 import '../data/mock_medications.dart';
 import 'medication_list_screen.dart';
 import '../widgets/interaction_card.dart';
+import '../widgets/interaction_body.dart';
 
 class InteractionCheckScreen extends StatefulWidget {
   const InteractionCheckScreen({super.key});
@@ -13,7 +14,6 @@ class InteractionCheckScreen extends StatefulWidget {
 }
 
 class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
-  //List<String> selectedMeds = [];
   List<Interaction> foundInteractions = [];
   final TextEditingController _medController = TextEditingController();
   final List<String> _selectedMedications = [];
@@ -30,18 +30,23 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
     });
   }
 
-void checkInteractions() {
-  final selected = mockMedications
-      .where((m) => _selectedMedications.contains(m.name))
-      .toList();
+  void checkInteractions() {
+    final selected = mockMedications
+        .where((m) => _selectedMedications.contains(m.name))
+        .toList();
 
-  final results = generateInteractions(selected);
+    final results = generateInteractions(selected);
 
+    setState(() {
+      foundInteractions = results;
+    });
+  }
+
+  void removeMedication(String med) {
   setState(() {
-    foundInteractions = results;
+    _selectedMedications.remove(med);
   });
 }
-
 
 
   Color getColor(InteractionSeverity severity) {
@@ -87,115 +92,21 @@ void checkInteractions() {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: RawAutocomplete<String>(
-                textEditingController: _medController,
-                focusNode: FocusNode(),
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text.isEmpty) {
-                    return const Iterable<String>.empty();
-                  }
-                  return mockMedications
-                      .where((m) => m.name.toLowerCase().contains(textEditingValue.text.toLowerCase()))
-                      .map((m) => m.name); // Преобразуем в Iterable<String>
-                },
-                displayStringForOption: (option) => option,
-                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                  return TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    decoration: InputDecoration(
-                      labelText: 'Enter medication',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      suffixIcon: const Icon(Icons.search),
-                    ),
-                  );
-                },
-                optionsViewBuilder: (context, onSelected, options) {
-                  return Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 4.0,
-                      borderRadius: BorderRadius.circular(8),
-                      child: ListView(
-                        padding: const EdgeInsets.all(8.0),
-                        shrinkWrap: true,
-                        children: options.map((option) {
-                          return ListTile(
-                            title: Text(option),
-                            onTap: () {
-                              if (!_selectedMedications.contains(option)) {
-                                setState(() {
-                                  _selectedMedications.add(option);
-                                  _medController.clear();
-                                });
-                              }
-                              onSelected(option);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            if (_selectedMedications.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Wrap(
-                  spacing: 8,
-                  children: _selectedMedications.map((med) {
-                    return Chip(
-                      label: Text(med),
-                      deleteIcon: const Icon(Icons.close),
-                      onDeleted: () {
-                        setState(() {
-                          _selectedMedications.remove(med);
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-
-            const SizedBox(height: 16),
-            Row( 
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _selectedMedications.length >= 2 ? checkInteractions : null,
-                  child: const Text('Check Interactions'),
-                ),
-                const SizedBox(width: 12), // расстояние между кнопками
-                ElevatedButton(
-                  onPressed: () {
-                    clearInteractions();
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                  child: const Text('Clear Interactions')),
-              ]
-            ),
-            const SizedBox(height: 16),
-            if (foundInteractions.isNotEmpty)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: foundInteractions.length,
-                  itemBuilder: (context, index) {
-                    final interaction = foundInteractions[index];
-                    return InteractionCard(interaction: interaction); // refactored to use interaction_card.dart
-                  },
-
-                ),
-              ),
-          ],
-        ),
+      body: InteractionBody(
+        medController: _medController,
+        selectedMedications: _selectedMedications,
+        foundInteractions: foundInteractions,
+        onCheck: checkInteractions,
+        onClear: clearInteractions,
+        onRemoveMed: removeMedication,
+        onAddMed: (med) {
+          if (!_selectedMedications.contains(med)) {
+            setState(() {
+              _selectedMedications.add(med);
+              _medController.clear();
+            });
+          }
+        },
       ),
     );
   }
