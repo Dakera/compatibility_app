@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/interaction.dart';
 import '../data/mock_medications.dart';
-import '../screens/medication_list_screen.dart';
 import 'interaction_card.dart';
 
 class InteractionBody extends StatelessWidget {

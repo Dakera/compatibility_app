@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/interaction.dart';
 import '../data/mock_medications.dart';
+import '../data/mock_instructions.dart';
+import 'track_dialog.dart';
 
 class InteractionCard extends StatelessWidget {
   final Interaction interaction;
@@ -67,9 +69,13 @@ class InteractionCard extends StatelessWidget {
                 (m) => m.name == medName,
                 orElse: () => throw Exception('Medication with name $medName not found'),
               );
+              final instruction = mockInstructions.firstWhere(
+                (i) => i.id == med.instructionId,
+                orElse: () => throw Exception('Instruction for ${med.name} not found'),
+              );
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Card( // med card
+                child: Card(
                   elevation: 1,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   child: Padding(
@@ -86,6 +92,28 @@ class InteractionCard extends StatelessWidget {
                         Text('Побочные эффекты: ${med.sideEffects.join(', ')}'),
                         if (med.warnings.isNotEmpty)
                           Text('❗ Предупреждения: ${med.warnings.join(', ')}'),
+                        const SizedBox(height: 8),
+                        Text('Инструкция:', style: TextStyle(fontWeight: FontWeight.w600)),
+                        if (instruction.warningsSection != null)
+                          Text('⚠️ ${instruction.warningsSection!}'),
+                        if (instruction.interactionsSection != null)
+                          Text('💊 ${instruction.interactionsSection!}'),
+                        if (instruction.usageSection != null)
+                          Text('📋 ${instruction.usageSection!}'),
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.bookmark_add_outlined),
+                            label: const Text('Отслеживать'),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => TrackMedicationDialog(medicationName: med.name),
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),

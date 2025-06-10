@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/medication.dart';
+import '../classes/medication.dart';
+import '../classes/medication_instruction.dart'; // класс MedicationInstruction
+import '../data/mock_instructions.dart'; // mockInstructions
 
 class MedicationDetailScreen extends StatelessWidget {
   final Medication medication;
@@ -8,6 +10,15 @@ class MedicationDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final instruction = mockInstructions.firstWhere(
+      (instr) => instr.id == medication.instructionId,
+      orElse: () => MedicationInstruction(
+        id: medication.instructionId,
+        medicationName: medication.name,
+        fullText: 'Инструкция не найдена',
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(medication.name),
@@ -16,14 +27,22 @@ class MedicationDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            _buildSection('Active Ingredient', medication.activeIngredient),
-            _buildSection('Instruction', medication.instruction),
-            _buildSection('Groups', medication.group.join(', ')),
-            _buildSection('Warnings', medication.warnings.join(', ')),
-            _buildSection('Upper Intake Limit', medication.upperIntakeLim),
-            _buildSection('Form', medication.form.join(', ')),
-            _buildSection('Trade Names', medication.tradeNames.join(', ')),
-            _buildSection('Side Effects', medication.sideEffects.join(', ')),
+            _buildSection('Активное вещество', medication.activeIngredient),
+            _buildSection('Группы', medication.group.join(', ')),
+            _buildSection('Форма выпуска', medication.form.join(', ')),
+            _buildSection('Торговые названия', medication.tradeNames.join(', ')),
+            _buildSection('Побочные эффекты', medication.sideEffects.join(', ')),
+            _buildSection('Предупреждения', medication.warnings.join(', ')),
+            if (medication.upperIntakeLim != null)
+              _buildSection('Допустимая суточная доза', medication.upperIntakeLim!),
+            const Divider(height: 32),
+            _buildSection('Полный текст инструкции', instruction.fullText),
+            if (instruction.usageSection != null)
+              _buildSection('Способ применения', instruction.usageSection!),
+            if (instruction.warningsSection != null)
+              _buildSection('Меры предосторожности', instruction.warningsSection!),
+            if (instruction.interactionsSection != null)
+              _buildSection('Взаимодействия', instruction.interactionsSection!),
           ],
         ),
       ),
@@ -36,9 +55,10 @@ class MedicationDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
           const SizedBox(height: 4),
           Text(content),
         ],

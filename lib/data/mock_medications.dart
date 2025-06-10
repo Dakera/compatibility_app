@@ -1,7 +1,8 @@
-import '../models/medication.dart';
+import '../classes/medication.dart';
 
 final List<Medication> mockMedications = [
   Medication(
+    id: 'med1',
     name: 'Парацетамол',
     activeIngredient: 'Парацетамол',
     group: ['Анальгетик', 'Антипиретик', 'Ненаркотический анальгетик'],
@@ -9,10 +10,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Панадол', 'Эффералган'],
     sideEffects: ['Тошнота', 'Аллергические реакции', 'Повышение активности печеночных ферментов'],
     warnings: ['С осторожностью при заболеваниях печени и почек'],
-    instruction: 'Парацетамол может усиливать эффект антикоагулянтов при длительном применении. Не рекомендуется сочетание с алкоголем из-за риска гепатотоксичности.',
-    upperIntakeLim: '4000 мг в сутки'
+    instructionId: 'instr1',
+    upperIntakeLim: '4000 мг в сутки',
   ),
   Medication(
+    id: 'med2',
     name: 'Ибупрофен',
     activeIngredient: 'Ибупрофен',
     group: ['НПВС'],
@@ -20,10 +22,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Нурофен', 'Бруфен'],
     sideEffects: ['Желудочная боль', 'Тошнота', 'Головная боль'],
     warnings: ['Может вызвать раздражение ЖКТ', 'Не сочетать с алкоголем'],
-    instruction: 'Ибупрофен не рекомендуется использовать одновременно с другими НПВС или кортикостероидами из-за повышенного риска желудочно-кишечных кровотечений.',
-    upperIntakeLim: '2400 мг в сутки'
+    instructionId: 'instr2',
+    upperIntakeLim: '2400 мг в сутки',
   ),
   Medication(
+    id: 'med3',
     name: 'Амоксициллин',
     activeIngredient: 'Амоксициллин',
     group: ['Антибиотик', 'Пенициллин'],
@@ -31,10 +34,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Флемоксин Солютаб', 'Амоксил'],
     sideEffects: ['Диарея', 'Сыпь', 'Головокружение'],
     warnings: ['Может вызывать аллергические реакции', 'Проверка на аллергию к пенициллину обязательна'],
-    instruction: 'Не следует комбинировать с бактериостатическими антибиотиками (например, тетрациклином).',
-    upperIntakeLim: 'Не указано, принимать по назначению врача'
+    instructionId: 'instr3',
+    upperIntakeLim: '3000 мг в сутки',
   ),
   Medication(
+    id: 'med4',
     name: 'Цитрамон',
     activeIngredient: 'Ацетилсалициловая кислота + Парацетамол + Кофеин',
     group: ['Анальгетик', 'Комбинированное средство'],
@@ -42,10 +46,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Цитрамон П', 'Цитрамон Форте'],
     sideEffects: ['Раздражение желудка', 'Повышенное давление'],
     warnings: ['Не рекомендуется при гипертонии'],
-    instruction: 'Не использовать с другими НПВС. Усиливает эффект антикоагулянтов и некоторых антидепрессантов.',
-    upperIntakeLim: '6 таблеток в сутки'
+    instructionId: 'instr4',
+    upperIntakeLim: '6 таблеток в сутки',
   ),
   Medication(
+    id: 'med5',
     name: 'Дротаверин',
     activeIngredient: 'Дротаверин',
     group: ['Спазмолитик'],
@@ -53,10 +58,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Но-шпа'],
     sideEffects: ['Головокружение', 'Пониженное давление'],
     warnings: ['С осторожностью при гипотонии'],
-    instruction: 'Совместное применение с леводопой может ослабить антипаркинсонический эффект последней.',
-    upperIntakeLim: '240 мг в сутки'
+    instructionId: 'instr5',
+    upperIntakeLim: '240 мг в сутки',
   ),
   Medication(
+    id: 'med6',
     name: 'Лоратадин',
     activeIngredient: 'Лоратадин',
     group: ['Антигистаминное средство'],
@@ -64,10 +70,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Кларитин', 'Лоратадин-Тева'],
     sideEffects: ['Сонливость', 'Сухость во рту'],
     warnings: ['Избегать одновременного применения с алкоголем'],
-    instruction: 'Может усиливать седативный эффект других ЦНС-депрессантов.',
-    upperIntakeLim: '10 мг в сутки'
+    instructionId: 'instr6',
+    upperIntakeLim: '10 мг в сутки',
   ),
   Medication(
+    id: 'med7',
     name: 'Цетиризин',
     activeIngredient: 'Цетиризин',
     group: ['Антигистаминное средство'],
@@ -75,10 +82,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Зиртек', 'Цетрин'],
     sideEffects: ['Сонливость', 'Утомляемость'],
     warnings: ['Может влиять на управление транспортом'],
-    instruction: 'Одновременное применение с алкоголем усиливает угнетение ЦНС.',
-    upperIntakeLim: '10 мг в сутки'
+    instructionId: 'instr7',
+    upperIntakeLim: '10 мг в сутки',
   ),
   Medication(
+    id: 'med8',
     name: 'Метформин',
     activeIngredient: 'Метформин',
     group: ['Гипогликемическое средство'],
@@ -86,10 +94,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Глюкофаж', 'Сиофор'],
     sideEffects: ['Желудочно-кишечные расстройства', 'Металлический вкус во рту'],
     warnings: ['Не применять при почечной недостаточности'],
-    instruction: 'Не сочетать с алкоголем. Может усиливать эффект инсулина.',
-    upperIntakeLim: '2000 мг в сутки'
+    instructionId: 'instr8',
+    upperIntakeLim: '2000 мг в сутки',
   ),
   Medication(
+    id: 'med9',
     name: 'Ранитидин',
     activeIngredient: 'Ранитидин',
     group: ['Блокатор H2-гистаминовых рецепторов'],
@@ -97,10 +106,11 @@ final List<Medication> mockMedications = [
     tradeNames: ['Ранисан', 'Гистак'],
     sideEffects: ['Головная боль', 'Диарея'],
     warnings: ['Может маскировать симптомы рака желудка'],
-    instruction: 'Уменьшает абсорбцию кетоконазола и некоторых других препаратов.',
-    upperIntakeLim: '300 мг в сутки'
+    instructionId: 'instr9',
+    upperIntakeLim: '300 мг в сутки',
   ),
   Medication(
+    id: 'med10',
     name: 'Омепразол',
     activeIngredient: 'Омепразол',
     group: ['ИПП – ингибитор протонной помпы'],
@@ -108,7 +118,7 @@ final List<Medication> mockMedications = [
     tradeNames: ['Омез', 'Лосек'],
     sideEffects: ['Тошнота', 'Головная боль', 'Запор'],
     warnings: ['Длительное применение может вызвать дефицит витамина B12'],
-    instruction: 'Снижает эффективность некоторых антиретровирусных и противогрибковых препаратов.',
-    upperIntakeLim: '40 мг в сутки'
+    instructionId: 'instr10',
+    upperIntakeLim: '40 мг в сутки',
   ),
 ];

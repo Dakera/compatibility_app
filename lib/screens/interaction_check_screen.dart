@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-//import 'package:multi_select_flutter/multi_select_flutter.dart';
 import '../models/interaction.dart';
 import '../data/mock_medications.dart';
-import 'medication_list_screen.dart';
-import '../widgets/interaction_card.dart';
+import '../data/tracked.dart';
 import '../widgets/interaction_body.dart';
+import '../screens/tracked_medications_screen.dart';
+import 'medication_list_screen.dart';
 
 class InteractionCheckScreen extends StatefulWidget {
   const InteractionCheckScreen({super.key});
@@ -78,7 +78,7 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Check Drug Interactions'),
+        title: const Text('Проверка взаимодействий'),
         actions: [
           IconButton(
             icon: const Icon(Icons.list),
@@ -87,6 +87,20 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const MedicationListScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            tooltip: 'Отслеживаемые',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TrackedMedicationsScreen(
+                    initialMedications: TrackedMedicationsStore().trackedMedications,
+                  ),
+                ),
               );
             },
           ),

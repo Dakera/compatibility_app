@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   multi_select_flutter: ^4.1.3
+  collection: ^1.18.0 # Utility functions for Dart collections
+  provider: ^6.0.5 # Или последняя версия
 
 dev_dependencies:
   flutter_test:
