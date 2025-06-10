@@ -126,7 +126,7 @@ class _TrackedMedicationsScreenState extends State<TrackedMedicationsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addMedication,
-        backgroundColor: Colors.teal, // Добавляем цвет для FAB
+        backgroundColor: Color.fromARGB(255, 10, 205, 219), // Добавляем цвет для FAB
         child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Добавить лекарство',
       ),

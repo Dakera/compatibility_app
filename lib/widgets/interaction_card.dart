@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import '../models/interaction.dart';
 import '../data/mock_medications.dart';
 import '../data/mock_instructions.dart';
-import 'track_dialog.dart';
+import '../classes/medication_instruction.dart';
+import 'package:compatibility_app/classes/medication.dart'; // Импортируем класс Medication
+import 'package:collection/collection.dart'; // Для firstWhereOrNull
 
 class InteractionCard extends StatelessWidget {
   final Interaction interaction;
+  // ДОБАВЛЕНО: Коллбэк для отслеживания препарата
+  final void Function(Medication) onTrackMed;
 
-  const InteractionCard({super.key, required this.interaction});
+  const InteractionCard({
+    super.key,
+    required this.interaction,
+    required this.onTrackMed, // ИНИЦИАЛИЗАЦИЯ НОВОГО ПОЛЯ
+  });
 
   Color getColor(InteractionSeverity severity) {
     switch (severity) {
@@ -65,14 +73,21 @@ class InteractionCard extends StatelessWidget {
             Text(interaction.description),
             const SizedBox(height: 12),
             ...interaction.medications.map((medName) {
-              final med = mockMedications.firstWhere(
+              // ИСПОЛЬЗУЕМ firstWhereOrNull для надежности
+              final Medication? med = mockMedications.firstWhereOrNull(
                 (m) => m.name == medName,
-                orElse: () => throw Exception('Medication with name $medName not found'),
               );
-              final instruction = mockInstructions.firstWhere(
+
+              // Обрабатываем случай, если препарат не найден (хотя не должен)
+              if (med == null) {
+                return const Text('Ошибка: препарат не найден для отображения деталей.');
+              }
+
+              // ИСПОЛЬЗУЕМ firstWhereOrNull для надежности
+              final MedicationInstruction? instruction = mockInstructions.firstWhereOrNull(
                 (i) => i.id == med.instructionId,
-                orElse: () => throw Exception('Instruction for ${med.name} not found'),
               );
+
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Card(
@@ -94,12 +109,16 @@ class InteractionCard extends StatelessWidget {
                           Text('❗ Предупреждения: ${med.warnings.join(', ')}'),
                         const SizedBox(height: 8),
                         Text('Инструкция:', style: TextStyle(fontWeight: FontWeight.w600)),
-                        if (instruction.warningsSection != null)
-                          Text('⚠️ ${instruction.warningsSection!}'),
-                        if (instruction.interactionsSection != null)
-                          Text('💊 ${instruction.interactionsSection!}'),
-                        if (instruction.usageSection != null)
-                          Text('📋 ${instruction.usageSection!}'),
+                        if (instruction != null) ...[
+                          if (instruction.warningsSection != null && instruction.warningsSection!.isNotEmpty)
+                            Text('⚠️ ${instruction.warningsSection!}'),
+                          if (instruction.interactionsSection != null && instruction.interactionsSection!.isNotEmpty)
+                            Text('💊 ${instruction.interactionsSection!}'),
+                          if (instruction.usageSection != null && instruction.usageSection!.isNotEmpty)
+                            Text('📋 ${instruction.usageSection!}'),
+                        ] else ...[
+                          const Text('Инструкция не найдена.'),
+                        ],
                         const SizedBox(height: 4),
                         Align(
                           alignment: Alignment.centerRight,
@@ -107,10 +126,8 @@ class InteractionCard extends StatelessWidget {
                             icon: const Icon(Icons.bookmark_add_outlined),
                             label: const Text('Отслеживать'),
                             onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => TrackMedicationDialog(medicationName: med.name),
-                              );
+                              // ИЗМЕНЕНО: Вызываем коллбэк onTrackMed и передаем полный объект Medication
+                              onTrackMed(med);
                             },
                           ),
                         ),
@@ -119,7 +136,7 @@ class InteractionCard extends StatelessWidget {
                   ),
                 ),
               );
-            }),
+            }).toList(),
           ],
         ),
       ),

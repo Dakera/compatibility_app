@@ -36,7 +36,7 @@ class MedicationDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(medication.name),
-        backgroundColor: Colors.teal, // Добавляем цвет для AppBar
+        backgroundColor: Color.fromARGB(255, 10, 205, 219), // Добавляем цвет для AppBar
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

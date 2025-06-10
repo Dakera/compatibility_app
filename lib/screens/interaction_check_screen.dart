@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/interaction.dart';
-import '../data/mock_medications.dart';
+import '../data/mock_medications.dart'; // Для доступа к Medication объектам
 import '../data/tracked.dart';
-import '../widgets/interaction_body.dart';
+import '../widgets/interaction_body.dart'; // Мы внесем изменения в этот виджет
 import '../screens/tracked_medications_screen.dart';
 import 'medication_list_screen.dart';
+import 'package:compatibility_app/classes/medication.dart'; // Импортируем класс Medication
+import 'package:collection/collection.dart'; // Для firstWhereOrNull
+import '../widgets/track_dialog.dart'; // For TrackMedicationDialog
 
 class InteractionCheckScreen extends StatefulWidget {
   const InteractionCheckScreen({super.key});
@@ -16,7 +19,8 @@ class InteractionCheckScreen extends StatefulWidget {
 class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
   List<Interaction> foundInteractions = [];
   final TextEditingController _medController = TextEditingController();
-  final List<String> _selectedMedications = [];
+  // ИЗМЕНЕНО: Теперь храним объекты Medication, а не просто строки
+  final List<Medication> _selectedMedications = [];
 
   @override
   void dispose() {
@@ -31,23 +35,35 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
   }
 
   void checkInteractions() {
-    final selected = mockMedications
-        .where((m) => _selectedMedications.contains(m.name))
-        .toList();
-
-    final results = generateInteractions(selected);
+    // checkInteractions теперь работает напрямую с Medication объектами
+    final results = generateInteractions(_selectedMedications);
 
     setState(() {
       foundInteractions = results;
     });
   }
 
-  void removeMedication(String med) {
-  setState(() {
-    _selectedMedications.remove(med);
-  });
-}
+  // ИЗМЕНЕНО: Принимает Medication объект для удаления
+  void removeMedication(Medication med) {
+    setState(() {
+      _selectedMedications.removeWhere((m) => m.id == med.id);
+    });
+    // После удаления медикамента, возможно, стоит перепроверить взаимодействия
+    checkInteractions();
+  }
 
+  // НОВЫЙ МЕТОД: Для открытия TrackMedicationDialog с конкретным препаратом
+  void _trackMedication(Medication medicationToTrack) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return TrackMedicationDialog(
+          medicationName: medicationToTrack.name, // Передаем название
+          medicationId: medicationToTrack.id,     // Передаем ID
+        );
+      },
+    );
+  }
 
   Color getColor(InteractionSeverity severity) {
     switch (severity) {
@@ -71,18 +87,15 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
   }
 }
 
-
   @override
   Widget build(BuildContext context) {
-    //final medicationNames = mockMedications.map((m) => m.name).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Проверка взаимодействий'),
         actions: [
           IconButton(
             icon: const Icon(Icons.list),
-            tooltip: 'All Medications',
+            tooltip: 'Все препараты', // Изменено для ясности
             onPressed: () {
               Navigator.push(
                 context,
@@ -108,19 +121,28 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
       ),
       body: InteractionBody(
         medController: _medController,
-        selectedMedications: _selectedMedications,
+        // ИЗМЕНЕНО: onAddMed теперь получает строку, но преобразует ее в Medication
+        onAddMed: (String medName) {
+          final Medication? foundMedication = mockMedications.firstWhereOrNull(
+            (m) => m.name.toLowerCase() == medName.toLowerCase(),
+          );
+          if (foundMedication != null && !_selectedMedications.any((m) => m.id == foundMedication.id)) {
+            setState(() {
+              _selectedMedications.add(foundMedication);
+              _medController.clear();
+            });
+            checkInteractions(); // Перепроверяем взаимодействия после добавления
+          } else if (foundMedication == null) {
+            // Опционально: показать сообщение пользователю, что препарат не найден
+            print('Препарат "$medName" не найден в данных.');
+          }
+        },
+        selectedMedications: _selectedMedications, // Теперь List<Medication>
         foundInteractions: foundInteractions,
         onCheck: checkInteractions,
         onClear: clearInteractions,
-        onRemoveMed: removeMedication,
-        onAddMed: (med) {
-          if (!_selectedMedications.contains(med)) {
-            setState(() {
-              _selectedMedications.add(med);
-              _medController.clear();
-            });
-          }
-        },
+        onRemoveMed: removeMedication, // Передаем обновленный метод
+        onTrackMed: _trackMedication, // НОВЫЙ КОЛЛБЭК: Передаем метод отслеживания
       ),
     );
   }

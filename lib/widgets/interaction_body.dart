@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import '../models/interaction.dart';
 import '../data/mock_medications.dart';
 import 'interaction_card.dart';
+import 'package:compatibility_app/classes/medication.dart'; // Импортируем класс Medication
 
 class InteractionBody extends StatelessWidget {
   final TextEditingController medController;
-  final List<String> selectedMedications;
+  // ИЗМЕНЕНО: selectedMedications теперь List<Medication>
+  final List<Medication> selectedMedications;
   final List<Interaction> foundInteractions;
   final void Function() onCheck;
   final void Function() onClear;
-  final void Function(String) onRemoveMed;
+  // ИЗМЕНЕНО: onRemoveMed теперь принимает Medication
+  final void Function(Medication) onRemoveMed;
+  // ИЗМЕНЕНО: onAddMed теперь принимает String (и будет преобразовывать в Medication в родительском виджете)
   final void Function(String) onAddMed;
+  // ДОБАВЛЕНО: Новый коллбэк для отслеживания препарата из InteractionCard
+  final void Function(Medication) onTrackMed;
+
 
   const InteractionBody({
     super.key,
@@ -21,6 +28,7 @@ class InteractionBody extends StatelessWidget {
     required this.onClear,
     required this.onRemoveMed,
     required this.onAddMed,
+    required this.onTrackMed, // ИНИЦИАЛИЗАЦИЯ НОВОГО ПОЛЯ
   });
 
   @override
@@ -38,6 +46,7 @@ class InteractionBody extends StatelessWidget {
                 if (textEditingValue.text.isEmpty) {
                   return const Iterable<String>.empty();
                 }
+                // Возвращаем имена для автозаполнения
                 return mockMedications
                     .where((m) => m.name.toLowerCase().contains(textEditingValue.text.toLowerCase()))
                     .map((m) => m.name);
@@ -51,8 +60,21 @@ class InteractionBody extends StatelessWidget {
                     labelText: 'Введите название лекарства',
                     hintText: 'Например: Цитрамон',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    suffixIcon: const Icon(Icons.search),
+                    suffixIcon: IconButton( // Добавим кнопку для явного добавления
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        if (controller.text.isNotEmpty) {
+                          onAddMed(controller.text);
+                          controller.clear(); // Очищаем поле после добавления
+                        }
+                      },
+                    ),
                   ),
+                  onSubmitted: (value) {
+                    if (value.isNotEmpty) {
+                      onAddMed(value);
+                    }
+                  },
                 );
               },
               optionsViewBuilder: (context, onSelected, options) {
@@ -68,8 +90,8 @@ class InteractionBody extends StatelessWidget {
                         return ListTile(
                           title: Text(option),
                           onTap: () {
-                            onAddMed(option);
-                            onSelected(option);
+                            onAddMed(option); // Передаем выбранное имя в родительский виджет
+                            onSelected(option); // Для RawAutocomplete
                           },
                         );
                       }).toList(),
@@ -86,9 +108,9 @@ class InteractionBody extends StatelessWidget {
                 spacing: 8,
                 children: selectedMedications.map((med) {
                   return Chip(
-                    label: Text(med),
+                    label: Text(med.name), // Используем med.name
                     deleteIcon: const Icon(Icons.close),
-                    onDeleted: () => onRemoveMed(med),
+                    onDeleted: () => onRemoveMed(med), // Передаем объект Medication
                   );
                 }).toList(),
               ),
@@ -118,7 +140,12 @@ class InteractionBody extends StatelessWidget {
               child: ListView.builder(
                 itemCount: foundInteractions.length,
                 itemBuilder: (context, index) {
-                  return InteractionCard(interaction: foundInteractions[index]);
+                  final interaction = foundInteractions[index];
+                  // ИЗМЕНЕНО: Передаем onTrackMed в InteractionCard
+                  return InteractionCard(
+                    interaction: interaction,
+                    onTrackMed: onTrackMed,
+                  );
                 },
               ),
             ),
