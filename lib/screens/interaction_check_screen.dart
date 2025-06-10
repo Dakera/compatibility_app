@@ -94,16 +94,6 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
         title: const Text('Проверка взаимодействий'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.list),
-            tooltip: 'Все препараты', // Изменено для ясности
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MedicationListScreen()),
-              );
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.favorite),
             tooltip: 'Отслеживаемые',
             onPressed: () {
@@ -114,6 +104,16 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
                     initialMedications: TrackedMedicationsStore().trackedMedications,
                   ),
                 ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.list),
+            tooltip: 'Все препараты', // Изменено для ясности
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MedicationListScreen()),
               );
             },
           ),
