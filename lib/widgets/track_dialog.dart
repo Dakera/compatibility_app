@@ -2,16 +2,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:compatibility_app/classes/tracked_medications.dart';
-import '../data/tracked.dart';
+import 'package:compatibility_app/data/tracked.dart';
+import 'package:compatibility_app/services/notification_manager.dart';
+import 'package:compatibility_app/classes/app_notification.dart';
 
 class TrackMedicationDialog extends StatefulWidget {
   final String medicationName;
-  final String? medicationId; // ДОБАВЛЕНО/ИСПРАВЛЕНО: Теперь medicationId является частью виджета
+  final String? medicationId;
 
   const TrackMedicationDialog({
     super.key,
     required this.medicationName,
-    this.medicationId, // ДОБАВЛЕНО/ИСПРАВЛЕНО: Принимаем medicationId в конструкторе
+    this.medicationId,
   });
 
   @override
@@ -30,9 +32,9 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
   String? selectedDosage;
   DosageUnit? selectedUnit;
 
-  TimeOfDay selectedTime = TimeOfDay.now();
-  // Убедитесь, что selectedFrequency всегда инициализировано
-  NotificationFrequency selectedFrequency = NotificationFrequency.daily; 
+  bool _createNotification = false;
+  TimeOfDay? selectedTime;
+  NotificationFrequency? selectedFrequency;
 
   final Map<MedicationForm, String> formNames = {
     MedicationForm.tablet: 'Таблетка',
@@ -51,10 +53,8 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
     NotificationFrequency.daily: 'Ежедневно',
     NotificationFrequency.everyTwoDays: 'Раз в 2 дня',
     NotificationFrequency.weekly: 'Раз в неделю',
-    NotificationFrequency.monthly: 'Раз в месяц',
-    // Добавьте другие частоты, если нужно
+    NotificationFrequency.monthly: 'Ежемесячно',
   };
-
 
   @override
   void initState() {
@@ -74,13 +74,25 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
       isValid = _formKeyStep1.currentState?.validate() ?? false;
     } else if (currentStep == 1) {
       isValid = _formKeyStep2.currentState?.validate() ?? false;
-      // Дополнительная проверка на null для полей из Step 2
       if (isValid && (selectedForm == null || selectedDosage == null || selectedUnit == null)) {
         isValid = false;
-        // Можно добавить сообщение пользователю о необходимости заполнить все поля
       }
     } else {
-      isValid = true;
+      if (_createNotification) {
+        if (selectedTime == null || selectedFrequency == null) {
+          isValid = false;
+          // ИСПРАВЛЕНО: Добавлена проверка `mounted` перед использованием `context`
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Пожалуйста, выберите время и частоту уведомления.')),
+            );
+          }
+        } else {
+          isValid = true;
+        }
+      } else {
+        isValid = true;
+      }
     }
 
     if (isValid) {
@@ -94,13 +106,27 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
     }
   }
 
-  void _finish() {
-    // Использование NotificationFrequency.values.byName() для конвертации
-    // Это предполагает, что имена в MedicationFrequency и NotificationFrequency совпадают.
-    // Если они отличаются, вам понадобится явное сопоставление.
+  void _finish() async {
+    if (selectedForm == null || selectedDosage == null || selectedUnit == null) {
+      print('Основные поля формы не заполнены.');
+      return;
+    }
 
-    // final NotificationFrequency finalFrequency = NotificationFrequency.values.byName(selectedFrequency.name);
-    // ^ Эту строку можно упростить, так как selectedFrequency уже является нужным типом.
+    AppNotification? appNotification;
+    if (_createNotification && selectedTime != null && selectedFrequency != null) {
+      appNotification = AppNotification.fromTrackedMedication(
+        medicationId: widget.medicationId ?? UniqueKey().toString(),
+        medicationName: customNameController.text.isNotEmpty ? customNameController.text : widget.medicationName,
+        reminderTime: selectedTime,
+        frequency: selectedFrequency,
+      );
+
+      if (appNotification != null) {
+        await NotificationManager().scheduleNotification(appNotification);
+      } else {
+        print('Не удалось создать объект уведомления. Проверьте время и частоту.');
+      }
+    }
 
     final trackedMedication = TrackedMedication(
       medicationId: widget.medicationId ?? UniqueKey().toString(),
@@ -108,29 +134,32 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
       form: selectedForm!,
       dosage: double.parse(selectedDosage!),
       dosageUnit: selectedUnit!,
-      reminderTime: selectedTime,
-      frequency: selectedFrequency, // Используйте selectedFrequency напрямую
+      reminderTime: _createNotification ? selectedTime : null,
+      frequency: _createNotification ? selectedFrequency : null,
+      notificationId: appNotification?.id,
     );
 
-    // Вместо pop с результатом, добавляем в стор
     TrackedMedicationsStore().addMedication(trackedMedication);
 
-    // Просто закрываем диалог
-    Navigator.of(context).pop();
+    // ИСПРАВЛЕНО: Добавлена проверка `mounted` перед использованием `context`
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
 
     print('Добавлено в отслеживаемое:');
     print('ID: ${trackedMedication.medicationId}');
     print('Имя: ${trackedMedication.customName}');
     print('Форма: ${formNames[trackedMedication.form]}');
     print('Дозировка: ${trackedMedication.dosage} ${unitNames[trackedMedication.dosageUnit]}');
-    print('Время: ${trackedMedication.reminderTime.format(context)}');
-    print('Частота: ${frequencyNames[selectedFrequency]}'); // Для печати можно использовать map frequencyNames
+    print('Время: ${trackedMedication.reminderTime?.format(context) ?? 'N/A'}');
+    print('Частота: ${frequencyNames[trackedMedication.frequency] ?? 'N/A'}');
+    print('ID Уведомления: ${trackedMedication.notificationId ?? 'N/A'}');
   }
 
   Future<void> _pickTime() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: selectedTime,
+      initialTime: selectedTime ?? TimeOfDay.now(),
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -229,19 +258,43 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ListTile(
-          title: Text('Время приёма: ${selectedTime.format(context)}'),
-          trailing: const Icon(Icons.access_time),
-          onTap: _pickTime,
+        SwitchListTile(
+          title: const Text('Создать уведомление'),
+          value: _createNotification,
+          onChanged: (bool value) {
+            setState(() {
+              _createNotification = value;
+              if (_createNotification) {
+                selectedTime = TimeOfDay.now();
+                selectedFrequency = NotificationFrequency.daily;
+              } else {
+                selectedTime = null;
+                selectedFrequency = null;
+              }
+            });
+          },
         ),
-        DropdownButtonFormField<NotificationFrequency>(
-          value: selectedFrequency,
-          decoration: const InputDecoration(labelText: 'Частота'),
-          items: NotificationFrequency.values.map((freq) {
-            return DropdownMenuItem(value: freq, child: Text(frequencyNames[freq]!));
-          }).toList(),
-          onChanged: (value) => setState(() => selectedFrequency = value!),
-        ),
+        if (_createNotification) ...[
+          ListTile(
+            title: Text('Время приёма: ${selectedTime?.format(context) ?? 'Выберите время'}'),
+            trailing: const Icon(Icons.access_time),
+            onTap: _pickTime,
+          ),
+          DropdownButtonFormField<NotificationFrequency>(
+            value: selectedFrequency,
+            decoration: const InputDecoration(labelText: 'Частота'),
+            items: NotificationFrequency.values.map((freq) {
+              return DropdownMenuItem(value: freq, child: Text(frequencyNames[freq] ?? freq.toString()));
+            }).toList(),
+            onChanged: (value) => setState(() => selectedFrequency = value!),
+            validator: (value) {
+              if (_createNotification && value == null) {
+                return 'Пожалуйста, выберите частоту';
+              }
+              return null;
+            },
+          ),
+        ],
       ],
     );
   }
@@ -249,7 +302,7 @@ class _TrackMedicationDialogState extends State<TrackMedicationDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Добавить препарат'),
+      title: Text('Добавить "${widget.medicationName}"'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,

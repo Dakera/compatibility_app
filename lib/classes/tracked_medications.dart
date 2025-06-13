@@ -12,23 +12,22 @@ enum DosageUnit {
   ml,
 }
 
-// Переименовал MedicationFrequency в NotificationFrequency, чтобы использовать только один enum
-// для частоты и в TrackedMedication, и в TrackMedicationDialog.
 enum NotificationFrequency {
   daily,
-  everyTwoDays, // Это было 'everyOtherDay', изменил на 'everyTwoDays' для соответствия
+  everyTwoDays,
   weekly,
-  monthly, 
+  monthly,
 }
 
 class TrackedMedication {
   final String medicationId;
-  final String customName; // Optional, for display purposes
-  final MedicationForm form; // Используем enum
+  final String customName;
+  final MedicationForm form;
   final double dosage;
-  final DosageUnit dosageUnit; // Используем enum
-  final TimeOfDay reminderTime;
-  final NotificationFrequency frequency; // Используем enum
+  final DosageUnit dosageUnit;
+  final TimeOfDay? reminderTime;
+  final NotificationFrequency? frequency;
+  final int? notificationId; // НОВОЕ: ID связанного уведомления
 
   TrackedMedication({
     required this.medicationId,
@@ -36,7 +35,8 @@ class TrackedMedication {
     required this.form,
     required this.dosage,
     required this.dosageUnit,
-    required this.reminderTime,
-    required this.frequency,
+    this.reminderTime,
+    this.frequency,
+    this.notificationId, // НОВОЕ: Добавляем в конструктор
   });
 }

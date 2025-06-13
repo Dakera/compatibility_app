@@ -109,7 +109,7 @@ class _InteractionCheckScreenState extends State<InteractionCheckScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.list),
-            tooltip: 'Все препараты', // Изменено для ясности
+            tooltip: 'Все препараты',
             onPressed: () {
               Navigator.push(
                 context,

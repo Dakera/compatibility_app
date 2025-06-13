@@ -1,46 +1,53 @@
-import 'package:flutter/foundation.dart'; // Для ChangeNotifier
-import 'package:flutter/material.dart'; // Для TimeOfDay, если используется в TrackedMedication
-import 'package:compatibility_app/classes/tracked_medications.dart'; // Импортируем ваш класс TrackedMedication
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:compatibility_app/classes/tracked_medications.dart';
+import 'package:compatibility_app/services/notification_manager.dart'; // ИМПОРТ: NotificationManager
 
-// Этот класс будет хранить ваши отслеживаемые медикаменты
-// и уведомлять слушателей об изменениях.
 class TrackedMedicationsStore extends ChangeNotifier {
-  // Приватный список для хранения медикаментов
   final List<TrackedMedication> _trackedMedications = [];
 
-  // Геттер для получения копии списка.
-  // Возвращаем List.unmodifiable, чтобы избежать внешних изменений напрямую.
   List<TrackedMedication> get trackedMedications => List.unmodifiable(_trackedMedications);
 
-  // Приватный конструктор для синглтона
   TrackedMedicationsStore._privateConstructor();
-
-  // Единственный экземпляр класса
   static final TrackedMedicationsStore _instance = TrackedMedicationsStore._privateConstructor();
-
-  // Фабричный конструктор для доступа к экземпляру
   factory TrackedMedicationsStore() {
     return _instance;
   }
 
-  // Метод для добавления медикамента
   void addMedication(TrackedMedication medication) {
     _trackedMedications.add(medication);
-    notifyListeners(); // Уведомляем всех, кто слушает этот стор, об изменении
+    notifyListeners();
     print('Medication added to store: ${medication.customName}');
   }
 
-  // Метод для удаления медикамента (опционально, но полезно)
+  // ИЗМЕНЕНО: Метод removeMedication теперь отменяет уведомление
   void removeMedication(String medicationId) {
-    _trackedMedications.removeWhere((med) => med.medicationId == medicationId);
-    notifyListeners();
-    print('Medication removed from store: $medicationId');
+    final int initialLength = _trackedMedications.length;
+    _trackedMedications.removeWhere((med) {
+      if (med.medicationId == medicationId) {
+        // Если у этого медикамента было уведомление, отменяем его
+        if (med.notificationId != null) {
+          NotificationManager().cancelNotification(med.notificationId!);
+          print('Canceled notification for ${med.customName} with ID ${med.notificationId}');
+        }
+        return true; // Удаляем медикамент
+      }
+      return false;
+    });
+
+    if (_trackedMedications.length < initialLength) {
+      notifyListeners();
+      print('Medication removed from store: $medicationId');
+    } else {
+      print('Medication not found in store: $medicationId');
+    }
   }
 
-  // Если вы хотите очистить список (например, для тестирования)
   void clearAllMedications() {
+    // При очистке всех медикаментов, также отменяем все уведомления
+    NotificationManager().cancelAllNotifications();
     _trackedMedications.clear();
     notifyListeners();
-    print('All medications cleared from store.');
+    print('All medications cleared from store, and all notifications cancelled.');
   }
 }
